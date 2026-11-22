@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cert-watch — 配信中の証明書を、外から毎日確認する監視</title>
+<meta name="description" content="Certbotの自動更新が静かに失敗しても、期限当日まで気づけないことがあります。配信中のTLS証明書を外部から毎日確認し、期限接近と「証明書が差し替わっていない」状態を日本語のメールで知らせます。">
+<style>
+  :root { --fg:#1a1a1a; --muted:#5a5a5a; --accent:#0b6e4f; --bg:#ffffff; --card:#f6f8f7; --border:#dde3e0; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", sans-serif; color:var(--fg); background:var(--bg); line-height:1.8; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  header { padding: 56px 0 8px; }
+  .logo { font-weight: 700; letter-spacing: .02em; color: var(--accent); }
+  h1 { font-size: 1.9rem; line-height: 1.45; margin: 14px 0 16px; }
+  h2 { font-size: 1.25rem; margin: 44px 0 12px; border-left: 4px solid var(--accent); padding-left: 10px; }
+  p, li { font-size: 1rem; }
+  .lead { color: var(--muted); font-size: 1.05rem; }
+  .cta { display:inline-block; background: var(--accent); color:#fff; text-decoration:none; padding: 14px 28px; border-radius: 8px; font-weight:700; margin: 18px 0 6px; }
+  .cta-note { color: var(--muted); font-size: .88rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; font-size: .98rem; }
+  th { background: var(--card); }
+  ul { padding-left: 1.3em; }
+  footer { margin: 56px 0 40px; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">cert-watch</div>
+  <h1>Certbotの自動更新は、静かに失敗します。<br>配信中の証明書を、外から毎日確認します。</h1>
+  <p class="lead">
+    自動更新を設定していても、80番ポートが塞がれた、Webサーバが新しい証明書を読み直していない、
+    タイマー自体が止まっている——こうした失敗は通知されず、証明書の期限が切れた当日の朝に初めて気づくことがあります。
+    cert-watchは、あなたのサーバの「外側」から実際に配信されている証明書を毎日取得し、
+    期限と「証明書が差し替わっているかどうか」を確認して、メールで知らせる仕組みです。
+  </p>
+  <!-- 申込フォームURLはプレースホルダ。Googleフォーム作成後に差し替えること（運用手順: production/cert-watch-signup-ops-2026-11-22.md） -->
+  <a class="cta" id="signup-link" href="https://forms.gle/REPLACE_WITH_GOOGLE_FORM_URL">無料で監視をはじめる（3ドメインまで）</a>
+  <p class="cta-note">申込フォームにドメインとメールアドレスを入れるだけです。サーバへのインストール作業はありません。</p>
+</header>
+
+<h2>何を確認しているか</h2>
+<div class="card">
+  <ul>
+    <li><strong>配信中の証明書そのもの</strong>を、外部からTLS接続して毎日取得します。サーバ内の更新ログではなく、利用者が実際に受け取っている証明書を見ます。</li>
+    <li><strong>期限アラート</strong>: 残り30日・14日・7日と、期限切れのタイミングでメールします。</li>
+    <li><strong>「差し替わっていない」警告</strong>: 残り7日以下なのに証明書のフィンガープリントが前回から変わっていない場合、自動更新が失敗している可能性が高い状態として、強く警告します。</li>
+    <li><strong>日本語の警告メール</strong>には、よくある原因の当たり（80番ポートの閉塞、Webサーバの再読み込み漏れ、更新タイマーの停止）と、確認の手順をあわせて書きます。</li>
+  </ul>
+</div>
+
+<h2>なぜ「外から見る」のか</h2>
+<p>
+  「更新処理が走ること」と「新しい証明書が配信されていること」は別物です。
+  更新処理が成功しても、Webサーバが古い証明書を配信し続けていれば、利用者から見えるのは古い証明書のままです。
+  監視をサーバの中ではなく外に置くことで、自動更新の仕組みと一緒に倒れることなく、結果だけを独立に確認できます。
+</p>
+
+<h2>料金</h2>
+<table>
+  <tr><th>プラン</th><th>料金</th><th>監視できるドメイン</th></tr>
+  <tr><td>無料</td><td>0円</td><td>3ドメインまで</td></tr>
+  <tr><td>有料</td><td>月500円</td><td>20ドメインまで</td></tr>
+</table>
+<p class="cta-note">
+  ※ 有料プランの受付は準備中です。まずは無料枠で開始し、有料プランの案内開始時にメールでお知らせします。
+</p>
+
+<h2>よくある質問</h2>
+<div class="card">
+  <p><strong>サーバに何かインストールしますか？</strong><br>
+  しません。ドメイン名だけで、外部から公開されている証明書を確認します。対象は443番ポートで配信されている証明書です。</p>
+  <p><strong>Let's Encrypt以外の証明書でも使えますか？</strong><br>
+  はい。発行元を問わず、配信中の証明書の有効期限とフィンガープリントを確認します。</p>
+  <p><strong>監視をやめたいときは？</strong><br>
+  申込時のメールアドレスから連絡いただければ、対象から外します。履歴データの扱いについては申込フォームの説明をご覧ください。</p>
+</div>
+
+<p>
+  <a class="cta" id="signup-link-2" href="https://forms.gle/REPLACE_WITH_GOOGLE_FORM_URL">無料で監視をはじめる</a>
+</p>
+
+<footer>
+  cert-watch（検証運用中）<br>
+  <!-- 運営者表記・特定商取引法に基づく表記は、有料販売の開始前にオーナー確認のうえでここへ掲載する。現時点では未掲載。 -->
+  お問い合わせは申込フォームの連絡先メールアドレスまで。
+</footer>
+
+</div>
+<script>
+// 流入元（UTM）を申込フォームへのリンクに引き継ぐ。外部ライブラリは使わない。
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var utm = [];
+  ["utm_source", "utm_medium"].forEach(function (k) {
+    if (params.get(k)) utm.push(k + "=" + encodeURIComponent(params.get(k)));
+  });
+  if (!utm.length) return;
+  ["signup-link", "signup-link-2"].forEach(function (id) {
+    var a = document.getElementById(id);
+    if (a) a.href = a.href + (a.href.indexOf("?") >= 0 ? "&" : "?") + utm.join("&");
+  });
+})();
+</script>
+</body>
+</html>
